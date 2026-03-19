@@ -5,8 +5,9 @@
 **A comprehensive Home Assistant integration for raspisms  
 
 **Key Features:**
+- ✅ Send message by sms   
 - ✅ Local cache storage   
-- ✅ Camera snapshot 
+- ✅ Camera snapshot integration 
 
 ## 🔌 Supported Devices
 
