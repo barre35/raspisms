@@ -1,0 +1,10 @@
+{
+  "domain": "raspisms",
+  "name": "Raspisms",
+  "codeowners": ["@barre35"],
+  "config_flow": true,
+  "iot_class": "cloud_push",
+  "dependencies": [],
+  "documentation": "https://github.com/barre35/raspisms",
+  "version": "1.0.0"
+}
