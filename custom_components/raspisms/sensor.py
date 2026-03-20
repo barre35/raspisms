@@ -79,7 +79,7 @@ class GenericTypeSensor(SensorEntity):
         
                 count = entry_data.get("count", 0) 
                 initial_count = count
-                _LOGGER.error("INITIAL %s", initial_count)
+                _LOGGER.debug("INITIAL %s", initial_count)
                 
                 for file_path in Path(storage_dir).glob(f"{self._entry_id}*.json"):
                 
@@ -123,7 +123,7 @@ class GenericTypeSensor(SensorEntity):
                             _LOGGER.info("Fichier %s déplacé vers %s", file_path.name, storage_dir)
                             
                             count += 1
-                            _LOGGER.error("COUNT %s", count)
+                            _LOGGER.debug("COUNT %s", count)
                                 
                         except Exception as e:
                             _LOGGER.error("Erreur lors du traitement de %s : %s", file_path.name, e)
