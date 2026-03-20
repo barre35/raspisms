@@ -105,5 +105,5 @@ data:
 
 ## 💬 Support
 
-- **Issues**: [Issues](https://github.com/barre35/message/issues)
-- **Wiki**: [Wiki](https://github.com/barre35/message/wiki)
+- **Issues**: [Issues](https://github.com/barre35/raspisms/issues)
+- **Wiki**: [Wiki](https://github.com/barre35/raspisms/wiki)
