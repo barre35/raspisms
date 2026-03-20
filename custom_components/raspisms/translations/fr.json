@@ -1,0 +1,79 @@
+{
+  "title": "RaspiSMS",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer RaspiSMS",
+        "description": "Entrez les détails de votre serveur RaspiSMS.",
+        "data": {
+          "host": "Hôte / Adresse IP",
+          "api_key": "Clé API",
+          "select_mode": "Nom de l'instance"
+        }
+      },
+      "raspi_sms_test": {
+        "title": "Test de notification",
+        "description": "Entrez un numéro de téléphone pour envoyer un SMS de test et valider la configuration.",
+        "data": {
+          "test_number": "Numéro de téléphone"
+        }
+      }
+    },
+    "error": {
+      "invalid_test_number": "Le numéro de téléphone est invalide (min 5 chiffres).",
+      "test_message_failed": "Échec de l'envoi du SMS de test. Vérifiez les logs.",
+      "cannot_connect": "Impossible de se connecter au serveur RaspiSMS.",
+      "invalid_auth": "Clé API invalide."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ajuster les options",
+        "data": {
+          "host": "Hôte / Adresse IP",
+          "api_key": "Clé API",
+          "select_mode": "Nom de l'instance"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "raspisms_count": {
+        "name": "SMS envoyés"
+      },
+      "raspisms_host": {
+        "name": "Serveur RaspiSMS"
+      },
+      "raspisms_inbox": {
+        "name": "Messages reçus"
+      },
+      "raspisms_outbox": {
+        "name": "Messages à envoyer"
+      },
+      "raspisms_sent": {
+        "name": "Messages envoyés"
+      },
+      "raspisms_delete": {
+        "name": "Messages supprimés"
+      }
+    }
+  },
+  "services": {
+    "short_message": {
+      "name": "Envoyer un SMS",
+      "description": "Envoie un SMS via RaspiSMS.",
+      "fields": {
+        "numbers": {
+          "name": "Numéros",
+          "description": "Liste de numéros de téléphone (séparés par des virgules)."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Le contenu du message."
+        }
+      }
+    }
+  }
+}

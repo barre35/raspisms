@@ -74,6 +74,13 @@ class GenericTypeSensor(SensorEntity):
             if entry:            
                 service = RaspiSMSNotificationService(entry.data)
                 
+                entry_data = self.hass.data[DOMAIN][self._entry_id]
+                store = entry_data.get("store")
+        
+                count = entry_data.get("count", 0) 
+                initial_count = count
+                _LOGGER.error("INITIAL %s", initial_count)
+                
                 for file_path in Path(storage_dir).glob(f"{self._entry_id}*.json"):
                 
                     if file_path.is_file():
@@ -114,10 +121,30 @@ class GenericTypeSensor(SensorEntity):
 
                             await self.hass.async_add_executor_job(move_to_sent, file_path)
                             _LOGGER.info("Fichier %s déplacé vers %s", file_path.name, storage_dir)
+                            
+                            count += 1
+                            _LOGGER.error("COUNT %s", count)
                                 
                         except Exception as e:
                             _LOGGER.error("Erreur lors du traitement de %s : %s", file_path.name, e)
 
+                if count > initial_count:
+                
+                    self.hass.data[DOMAIN][self._entry_id]["count"] = count
+                    
+                    stored_data = await store.async_load() or {}
+                    stored_data["count"] = count
+                    await store.async_save(stored_data)
+                    
+                    self.hass.data[DOMAIN][self._entry_id]["count"] = count
+                    _LOGGER.debug("Compteur RaspiSMS mis à jour : %s", count)
+                    
+                    for entity in self.hass.data[DOMAIN][self._entry_id].values():
+                        if isinstance(entity, SensorEntity) and entity.enabled:
+                            entity.async_write_ha_state()
+            
+                    _LOGGER.error("Compteur RaspiSMS sauvegardé : %s", count)
+                
             else:
                 _LOGGER.warning("Could not find config entry for ID %s", self._entry_id)
 
@@ -136,11 +163,13 @@ class GenericFolderSensor(SensorEntity):
         self._id = id
         self._name = name
         self._path = path
-        self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) {name}"
+        #self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) {name}"
         self._attr_unique_id = f"{entry.data.get('select_mode')}_{entry.data.get('host')}_{id}"
         self._attr_native_value = 0
         self._attr_icon = "mdi:numeric"
-    
+        self.translation_key = f"raspisms_{id}" # Doit correspondre au JSON
+        self._attr_has_entity_name = True
+
     @property
     def should_poll(self) -> bool:
         return True
@@ -150,7 +179,7 @@ class GenericFolderSensor(SensorEntity):
         data[self._id] = await self.hass.async_add_executor_job(self._count_files)
         _LOGGER.debug("%s %s", self._path, data[self._id])
         self._attr_native_value = data[self._id]
-        await data["store"].async_save({ self._id: data[self._id] })
+        #await data["store"].async_save({ self._id: data[self._id] })
         
     def _count_files(self):
         try:
@@ -175,11 +204,18 @@ class GenericCountSensor(SensorEntity):
     
     def __init__(self, entry: ConfigEntry, data: str):
         self._entry = entry
-        self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Count"
+        self._entry_id = entry.entry_id
+        #self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Count"
         self._attr_unique_id = f"{entry.data.get('select_mode')}_{entry.data.get('host')}_count"
         self._attr_native_value = 0
         self._attr_icon = "mdi:numeric"
+        self.translation_key = "raspisms_count" # Doit correspondre au JSON
+        self._attr_has_entity_name = True
 
+    @property
+    def native_value(self):
+        return self.hass.data[DOMAIN][self._entry_id].get("count", 0)
+        
     @property
     def device_info(self):
         return {
@@ -192,10 +228,12 @@ class RaspiSMSHostSensor(SensorEntity):
     
     def __init__(self, entry: ConfigEntry, data: str):
         self._entry = entry
-        self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Host"
+        #self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Host"
         self._attr_unique_id = f"{entry.data.get('select_mode')}_{entry.data.get('host')}_host"
         self._attr_native_value = entry.data.get("host")
         self._attr_icon = "mdi:server"
+        self.translation_key = "raspisms_host" # Doit correspondre au JSON
+        self._attr_has_entity_name = True
 
     @property
     def device_info(self):

@@ -198,7 +198,7 @@ class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.debug("Test message sent successfully.")
                     
                     return self.async_create_entry(
-                        title=f"Message ({self._data.get('host')})",
+                        title=f"{self._data.get('select_mode')} ({self._data.get('host')})",
                         data=self._data,
                     )
                     

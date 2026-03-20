@@ -1,0 +1,79 @@
+{
+  "title": "RaspiSMS",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure RaspiSMS",
+        "description": "Enter your RaspiSMS server details.",
+        "data": {
+          "host": "Host / IP Address",
+          "api_key": "API Key",
+          "select_mode": "Instance Name"
+        }
+      },
+      "raspi_sms_test": {
+        "title": "Test Notification",
+        "description": "Enter a phone number to send a test SMS and verify the configuration.",
+        "data": {
+          "test_number": "Phone Number"
+        }
+      }
+    },
+    "error": {
+      "invalid_test_number": "The phone number is invalid (min 5 digits).",
+      "test_message_failed": "Failed to send the test SMS. Check your logs.",
+      "cannot_connect": "Failed to connect to RaspiSMS server.",
+      "invalid_auth": "Invalid API Key."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adjust Options",
+        "data": {
+          "host": "Host / IP Address",
+          "api_key": "API Key",
+          "select_mode": "Instance Name"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "raspisms_count": {
+        "name": "Sent SMS count"
+      },
+      "raspisms_host": {
+        "name": "RaspiSMS server"
+      },
+      "raspisms_inbox": {
+        "name": "Inbox messages"
+      },
+      "raspisms_outbox": {
+        "name": "Outbox messages"
+      },
+      "raspisms_sent": {
+        "name": "Sent messages"
+      },
+      "raspisms_delete": {
+        "name": "Deleted messages"
+      }
+    }
+  },
+  "services": {
+    "short_message": {
+      "name": "Send SMS",
+      "description": "Sends an SMS via RaspiSMS.",
+      "fields": {
+        "numbers": {
+          "name": "Numbers",
+          "description": "List of phone numbers (comma separated)."
+        },
+        "message": {
+          "name": "Message",
+          "description": "The message to send."
+        }
+      }
+    }
+  }
+}

@@ -42,11 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "host": entry.data.get("host"),
         "api_key": entry.data.get("api_key"),
         "select_mode": entry.data.get("select_mode"),
-        "count": 0,
-        "outbox": stored_data.get("outbox", 0),
-        "sent": stored_data.get("sent", 0),
-        "inbox": stored_data.get("inbox", 0),
-        "delete": stored_data.get("delete", 0),
+        "count": stored_data.get("count", 0),
+        "outbox": None,
+        "sent": None,
+        "inbox": None,
+        "delete": None,
     }
     
     # Chargement des plateformes
