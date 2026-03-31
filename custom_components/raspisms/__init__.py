@@ -197,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     label   = parameters.get("label", None)        
                     
                     for _number in numbers:
-                        _LOGGER.error("Snapshot d'un SMS '%s' vers '%s' avec l'url '%s' et label '%s'", message, _number, url, label)
+                        _LOGGER.debug("Snapshot d'un SMS '%s' vers '%s' avec l'url '%s' et label '%s'", message, _number, url, label)
                         await send_message( _number, message, url)
 
                     if label:                    
@@ -223,9 +223,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             ]
 
                             for _camera in cameras:
-                                _LOGGER.error(f"Snapshot '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
+                                _LOGGER.debug(f"Snapshot '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
                                 await snapshot_camera( _camera)
                     
+                case "BELL":
+            
+                    numbers = parameters.get("numbers", [])
+                    message = parameters.get("message", "")
+                    url     = parameters.get("url","")
+                    label   = parameters.get("label", None)        
+                    
+                    if label:
+                                        
+                        label_reg = lr.async_get(hass)
+                        
+                        label_obj = next(
+                            (l for l in label_reg.labels.values() if l.name == label), 
+                            None
+                        )
+                        _label = label_obj.label_id if label_obj else None
+                
+                        if _label:
+                    
+                            ent_reg = er.async_get(hass)
+
+                            entities_with_label = er.async_entries_for_label(ent_reg, _label)
+
+                            cameras = [
+                                entitiy_with_label.entity_id 
+                                for entitiy_with_label in entities_with_label 
+                                if entitiy_with_label.domain == "camera"
+                            ]
+
+                            for _number in numbers:
+                                for _camera in cameras:
+                                    _LOGGER.debug(f"Bell '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
+                                    await snapshot_camera( _camera)
+                                    await alert_camera( _number, message, _camera)
+                                    
                 case "ALERT":
             
                     numbers = parameters.get("numbers", [])
@@ -234,7 +269,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     label   = parameters.get("label", None)        
                     
                     for _number in numbers:
-                        _LOGGER.error("Alert d'un SMS '%s' vers '%s' avec l'url '%s' et label '%s'", message, _number, url, label)
+                        _LOGGER.debug("Alert d'un SMS '%s' vers '%s' avec l'url '%s' et label '%s'", message, _number, url, label)
                         await send_message( _number, message, url)
 
                     if label:
@@ -261,7 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
                             for _number in numbers:
                                 for _camera in cameras:
-                                    _LOGGER.error(f"Alerte '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
+                                    _LOGGER.debug(f"Alerte '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
                                     await alert_camera( _number, message, _camera)
                                 
                 case _:
@@ -287,7 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "description": f"Notifier via l'intégration Message",
                 "fields": {
                     "title": {
-                        "description": "Commande : MESSAGE, SNAPSHOT ou ALERT .",
+                        "description": "Commande : MESSAGE, SNAPSHOT, ALERT ou BELL.",
                         "example": "'TEXT'",
                         "required": True,
                         "selector": {"text": { "type": "text" }},

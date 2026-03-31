@@ -143,7 +143,7 @@ class GenericTypeSensor(SensorEntity):
                         if isinstance(entity, SensorEntity) and entity.enabled:
                             entity.async_write_ha_state()
             
-                    _LOGGER.error("Compteur RaspiSMS sauvegardé : %s", count)
+                    _LOGGER.debug("Compteur RaspiSMS sauvegardé : %s", count)
                 
             else:
                 _LOGGER.warning("Could not find config entry for ID %s", self._entry_id)
