@@ -81,7 +81,12 @@ class GenericTypeSensor(SensorEntity):
                 initial_count = count
                 _LOGGER.debug("INITIAL %s", initial_count)
                 
-                for file_path in Path(storage_dir).glob(f"{self._entry_id}*.json"):
+                def get_files():
+                    return list(Path(storage_dir).glob(f"{self._entry_id}*.json"))
+    
+                file_paths = await self.hass.async_add_executor_job(get_files)
+                
+                for file_path in file_paths:
                 
                     if file_path.is_file():
             

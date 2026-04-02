@@ -6,5 +6,5 @@
   "iot_class": "cloud_push",
   "dependencies": [],
   "documentation": "https://github.com/barre35/raspisms",
-  "version": "1.0.4"
+  "version": "1.0.5"
 }
