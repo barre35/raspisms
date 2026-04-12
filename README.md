@@ -88,7 +88,7 @@ data:
     }
 ```
 
-**Alarme déclenchée
+Alarme déclenchée
 
 ```javascript
 service: notify.short_message
@@ -100,6 +100,34 @@ data:
       "message" : "Alarme déclenchée sur {{open_sensors|format=short}}",
       "url"     : "https://home.kerfleury.fr/local/alarme_alerte.jpg",
       "label" : "{{open_sensors|format=short}}"
+    }
+```
+
+Poubelle jaune
+
+```javascript
+service: notify.short_message
+data:
+  title: ALERT
+  message: |-
+    {   
+      "numbers" : [ "+33xxxxxxxxx"], 
+      "message" : "Poubelle jaune avant demain 12h",
+      "url"     : "https://home.kerfleury.fr/local/poubelle_jaune.jpg"
+    }
+```
+
+Sonnette
+
+```javascript
+service: notify.short_message
+data:
+  title: BELL
+  message: |-
+    {   
+      "numbers" : [ "+33xxxxxxxxx"], 
+      "message" : "Quelqu'un vient de sonner",
+      "label" : "DOOR"
     }
 ```
 
