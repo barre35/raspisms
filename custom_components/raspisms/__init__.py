@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 now = datetime.now()
                 
                 payload = {
-                    "numbers": str(numbers),
+                    "numbers": str(number),
                     "message": str(message),
                     "date": now.strftime("%d/%m/%Y"),
                     "time": now.strftime("%H:%M:%S"),
@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 now = datetime.now()
                 
                 payload = {
-                    "numbers": str(numbers),
+                    "numbers": str(number),
                     "message": str(message),
                     "date": now.strftime("%d/%m/%Y"),
                     "time": now.strftime("%H:%M:%S"),
