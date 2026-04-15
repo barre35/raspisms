@@ -323,7 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "fields": {
                     "title": {
                         "description": "Commande : MESSAGE, SNAPSHOT, ALERT ou BELL.",
-                        "example": "'TEXT'",
+                        "example": "'TEXTE DU MESSAGE'",
                         "required": True,
                         "selector": {"text": { "type": "text" }},
                     },
