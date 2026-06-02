@@ -7,7 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from datetime import timedelta
+from datetime import timedelta, datetime
 from homeassistant.util import Throttle
 from pathlib import Path
 from .const import DOMAIN, OUTBOX, SENT, INBOX, DELETE
@@ -16,8 +16,10 @@ from .notify import RaspiSMSNotificationService
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=1)
+PURGE_INTERVAL = timedelta(days=1)
 
 async def async_setup_entry( hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+    """Set up the sensor platform for the RaspiSMS integration."""
 
     data = hass.data[DOMAIN][entry.entry_id]
     
@@ -52,20 +54,74 @@ async def async_setup_entry( hass: HomeAssistant, entry: ConfigEntry, async_add_
 
 
 class GenericTypeSensor(SensorEntity):
+    """Sensor to display the type of the RaspiSMS integration (e.g., RaspiSMS, etc.)"""
     
     def __init__(self, entry: ConfigEntry, data: str):
+        """Initialize the sensor with the configuration entry and data."""
+
         self._entry_id = entry.entry_id
         self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Type"
         self._attr_unique_id = f"{entry.data.get('select_mode')}_{entry.data.get('host')}_type"
         self._attr_native_value = entry.data.get("select_mode", "Unknown")
         self._attr_icon = "mdi:chip"
-                
+        self._last_purge_date = None
+        
     @property
     def should_poll(self) -> bool:
+        """Indique que ce capteur doit être mis à jour périodiquement."""
+
         return True
-        
+
+    def _purge_old_sent_files_sync(self) -> None:
+        """Méthode synchrone de traitement et déplacement des fichiers expirés (E/S disque)."""
+        sent_dir = self.hass.config.path(".storage", DOMAIN, SENT)
+        delete_dir = self.hass.config.path(".storage", DOMAIN, DELETE)
+
+        if not os.path.exists(sent_dir):
+            return
+
+        if not os.path.exists(delete_dir):
+            os.makedirs(delete_dir, exist_ok=True)
+
+        now = datetime.now()
+        purged_count = 0
+
+        # On cible uniquement les JSON correspondants à l'instance courante
+        for file_path in Path(sent_dir).glob(f"{self._entry_id}*.json"):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = json.load(f)
+                
+                if "date" in content:
+                    file_date_str = content["date"].strip()
+                    try:
+                        file_date = datetime.strptime(file_date_str, "%d/%m/%Y")
+                        # Calcul de l'ancienneté du fichier
+                        age = now - file_date
+                        
+                        if age.days > 365:
+                            dest_path = os.path.join(delete_dir, file_path.name)
+                            shutil.move(str(file_path), dest_path)
+                            purged_count += 1
+                            _LOGGER.info("Purge : Fichier %s (>xj) déplacé vers DELETE", file_path.name)
+                    except ValueError:
+                        _LOGGER.warning("Purge : Format de date invalide dans %s : %s", file_path.name, file_date_str)
+            except (json.JSONDecodeError, OSError) as e:
+                _LOGGER.error("Purge : Impossible de traiter le fichier %s : %s", file_path.name, e)
+
+        if purged_count > 0:
+            _LOGGER.info("Purge terminée : %d fichiers déplacés vers le dossier DELETE", purged_count)
+
     async def async_update(self):
+        """Vérifie les dossiers et traite les fichiers dans le dossier outbox."""
             
+        now = datetime.now()
+
+        if self._last_purge_date is None or (now - self._last_purge_date) >= PURGE_INTERVAL:
+            _LOGGER.debug("Lancement de la purge automatique des fichiers de plus de 60 jours...")
+            await self.hass.async_add_executor_job(self._purge_old_sent_files_sync)
+            self._last_purge_date = now
+
         storage_dir = self.hass.config.path(".storage", DOMAIN, OUTBOX)
         if os.path.exists(storage_dir):
         
@@ -155,6 +211,7 @@ class GenericTypeSensor(SensorEntity):
 
     @property
     def device_info(self):
+        """Fournit les informations sur l'appareil pour ce capteur."""
         return {
             "identifiers": {(DOMAIN, self.platform.config_entry.entry_id)},
             "name": f"{self.platform.config_entry.data.get('select_mode')} ({self.platform.config_entry.data.get('host')})",
@@ -162,8 +219,10 @@ class GenericTypeSensor(SensorEntity):
         }
         
 class GenericFolderSensor(SensorEntity):
-    
+    """"Sensor to count the number of files in a specific folder (e.g., outbox, sent, inbox, delete)"""
+
     def __init__(self, entry: ConfigEntry, data: str, id: str, name: str, path: str):
+        """Initialize the sensor with the configuration entry, data, and folder information."""
         self._entry = entry
         self._id = id
         self._name = name
@@ -177,9 +236,11 @@ class GenericFolderSensor(SensorEntity):
 
     @property
     def should_poll(self) -> bool:
+        """Indique que ce capteur doit être mis à jour périodiquement."""
         return True
         
     async def async_update(self):
+        """Met à jour le nombre de fichiers dans le dossier spécifié."""
         data = self.hass.data[DOMAIN][self._entry.entry_id]
         data[self._id] = await self.hass.async_add_executor_job(self._count_files)
         _LOGGER.debug("%s %s", self._path, data[self._id])
@@ -187,6 +248,7 @@ class GenericFolderSensor(SensorEntity):
         #await data["store"].async_save({ self._id: data[self._id] })
         
     def _count_files(self):
+        """Compte le nombre de fichiers dans le dossier spécifié."""
         try:
             storage_dir = self.hass.config.path(".storage", DOMAIN, self._path)
             if not os.path.exists(storage_dir):
@@ -199,6 +261,7 @@ class GenericFolderSensor(SensorEntity):
 
     @property
     def device_info(self):
+        """Fournit les informations sur l'appareil pour ce capteur."""
         return {
             "identifiers": {(DOMAIN, self.platform.config_entry.entry_id)},
             "name": f"{self.platform.config_entry.data.get('select_mode')} ({self.platform.config_entry.data.get('host')})",
@@ -206,8 +269,11 @@ class GenericFolderSensor(SensorEntity):
         }
             
 class GenericCountSensor(SensorEntity):
-    
+    """Sensor to display the total count of processed messages"""
+
     def __init__(self, entry: ConfigEntry, data: str):
+        """Initialize the sensor with the configuration entry and data."""
+
         self._entry = entry
         self._entry_id = entry.entry_id
         #self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Count"
@@ -219,10 +285,14 @@ class GenericCountSensor(SensorEntity):
 
     @property
     def native_value(self):
+        """Retourne la valeur native du capteur, qui est le nombre total de messages traités."""
+
         return self.hass.data[DOMAIN][self._entry_id].get("count", 0)
         
     @property
     def device_info(self):
+        """Fournit les informations sur l'appareil pour ce capteur."""
+
         return {
             "identifiers": {(DOMAIN, self.platform.config_entry.entry_id)},
             "name": f"{self.platform.config_entry.data.get('select_mode')} ({self.platform.config_entry.data.get('host')})",
@@ -230,8 +300,11 @@ class GenericCountSensor(SensorEntity):
         }
 
 class RaspiSMSHostSensor(SensorEntity):
-    
+    """Sensor to display the host of the RaspiSMS integration"""
+
     def __init__(self, entry: ConfigEntry, data: str):
+        """Initialize the sensor with the configuration entry and data."""
+
         self._entry = entry
         #self._attr_name = f"{entry.data.get('select_mode')} ({entry.data.get('host')}) Host"
         self._attr_unique_id = f"{entry.data.get('select_mode')}_{entry.data.get('host')}_host"
@@ -242,6 +315,8 @@ class RaspiSMSHostSensor(SensorEntity):
 
     @property
     def device_info(self):
+        """Fournit les informations sur l'appareil pour ce capteur."""
+        
         return {
             "identifiers": {(DOMAIN, self.platform.config_entry.entry_id)},
             "name": f"{self.platform.config_entry.data.get('select_mode')} ({self.platform.config_entry.data.get('host')})",

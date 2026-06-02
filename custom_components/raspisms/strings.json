@@ -1,0 +1,13 @@
+{
+  "title": "RaspiSMS",
+  "media_source": {
+    "raspisms_bell": {
+      "title": "Sonnette",
+      "icon": "mdi:doorbell"
+    },
+    "raspisms_alert": {
+      "title": "Alarme",
+      "icon": "mdi:alert-decagram"
+    }
+  }
+}

@@ -26,7 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 # =================
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    
+    """Setup the integration."""
+
     _LOGGER.debug("Setup message integration.")
     
     # Gestion du stockage local
@@ -97,11 +98,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 now = datetime.now()
                 
                 payload = {
-                    "numbers": str(numbers),
+                    "numbers": str(number),
                     "message": str(message),
                     "date": now.strftime("%d/%m/%Y"),
                     "time": now.strftime("%H:%M:%S"),
                     "url": str(url),
+                    "cmd": "MESSAGE",
                 }
                 
                 storage_dir = hass.config.path(".storage", DOMAIN, OUTBOX)
@@ -122,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # ALERT CAMERA
             # ============ 
             
-            async def alert_camera( number, message, camera_entity_id):
+            async def alert_camera( number, message, camera_entity_id, cmd="ALERT"):
 
                 _LOGGER.debug("Envoi d'un snapshot de la caméra '%s' vers '%s'", number)
                 
@@ -149,11 +151,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 now = datetime.now()
                 
                 payload = {
-                    "numbers": str(numbers),
+                    "numbers": str(number),
                     "message": str(message),
                     "date": now.strftime("%d/%m/%Y"),
                     "time": now.strftime("%H:%M:%S"),
                     "url": str(url),
+                    "cmd": cmd,
                 }
                 
                 storage_dir = hass.config.path(".storage", DOMAIN, OUTBOX)
@@ -259,7 +262,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                 for _camera in cameras:
                                     _LOGGER.debug(f"Bell '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
                                     await snapshot_camera( _camera)
-                                    await alert_camera( _number, message, _camera)
+                                    await alert_camera( _number, message, _camera, cmd="BELL")
                                     
                 case "ALERT":
             
@@ -297,7 +300,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             for _number in numbers:
                                 for _camera in cameras:
                                     _LOGGER.debug(f"Alerte '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
-                                    await alert_camera( _number, message, _camera)
+                                    await alert_camera( _number, message, _camera, cmd="ALERT")
                                 
                 case _:
                 
@@ -323,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "fields": {
                     "title": {
                         "description": "Commande : MESSAGE, SNAPSHOT, ALERT ou BELL.",
-                        "example": "'TEXT'",
+                        "example": "'TEXTE DU MESSAGE'",
                         "required": True,
                         "selector": {"text": { "type": "text" }},
                     },

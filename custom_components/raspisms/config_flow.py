@@ -15,12 +15,15 @@ _LOGGER = logging.getLogger(__name__)
 # ======================================
 
 class MessageOptionsFlow(config_entries.OptionsFlow):
+    """Gestion du flow de configuration des options de l'intégration message."""
 
     # ==============
     # Initialisation
     # ==============
     
     def __init__(self, config_entry):
+        """"Initialisation du flow de configuration des options."""
+
         if AwesomeVersion(HAVERSION) < "2024.11.99":
             self.config_entry = config_entry
             
@@ -29,7 +32,8 @@ class MessageOptionsFlow(config_entries.OptionsFlow):
     # ===========
     
     async def async_step_init(self, user_input=None):    
-        
+        """Etape de configuration initiale des options de l'intégration message."""
+
         _LOGGER.debug("Mise à jour des options de l'intégration avec '%s'", user_input)
         errors = {}
         
@@ -69,6 +73,7 @@ class MessageOptionsFlow(config_entries.OptionsFlow):
 # ======================================
 
 class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Gestion du flow de configuration de l'intégration message."""
 
     VERSION = 1
 
@@ -77,6 +82,7 @@ class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # ==============
     
     def __init__(self):
+        """Initialisation du flow de configuration de l'intégration message."""
     
         self._data = {}
         
@@ -86,7 +92,9 @@ class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):        
+    def async_get_options_flow(config_entry):    
+        """Retourne le flow de configuration des options pour une entrée de configuration donnée."""    
+
         return MessageOptionsFlow(config_entry)
         
     # ==============================================
@@ -94,7 +102,8 @@ class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # ==============================================
     
     async def async_step_user(self, user_input=None):
-        
+        """Etape de saisie du choix du type d'intégration message."""
+
         _LOGGER.debug("Mise à jour des options de l'intégration avec '%s'", user_input)
         errors = {}
         
@@ -135,7 +144,8 @@ class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # ========================================
     
     async def async_step_raspi_sms_config(self, user_input=None):    
-        
+        """Etape de saisie des options de Raspi SMS pour l'intégration message."""
+
         _LOGGER.debug("Mise à jour des options Raspi SMS avec '%s'", user_input)
         errors = {}
         
@@ -167,7 +177,8 @@ class MessageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # ======================================
     
     async def async_step_raspi_sms_test(self, user_input=None):
-        
+        """Etape de test des options de Raspi SMS pour l'intégration message."""
+
         _LOGGER.debug("Test des options Raspi SMS avec '%s'", user_input)
         errors = {}
         

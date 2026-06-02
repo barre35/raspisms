@@ -25,16 +25,20 @@ ERROR_MESSAGES = {
 }
 
 async def async_get_service(hass: HomeAssistant, config: ConfigType, discovery_info: DiscoveryInfoType = None):
+    """Get the RaspiSMS notification service."""
 
     return RaspiSMSNotificationService(hass, config)
 
 class RaspiSMSNotificationService(BaseNotificationService):
+    """Implement the notification service for RaspiSMS."""
 
     def __init__(self, config):
+        """Initialize the notification service."""
         self.config = config
 
     async def async_send_message(self, message="", **kwargs):
-
+        """Send a message to the specified phone numbers."""
+        
         numbers = kwargs.get("numbers")
         url = kwargs.get("url", "")
         
