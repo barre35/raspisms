@@ -73,15 +73,18 @@ class GenericTypeSensor(SensorEntity):
         return True
 
     def _purge_old_sent_files_sync(self) -> None:
-        """Méthode synchrone de traitement et déplacement des fichiers expirés (E/S disque)."""
+        """Méthode synchrone pour supprimer définitivement les JSON expirés et leurs images associées."""
+        from datetime import datetime
+        import json
+        from pathlib import Path
+        from urllib.parse import urlparse
+
         sent_dir = self.hass.config.path(".storage", DOMAIN, SENT)
-        delete_dir = self.hass.config.path(".storage", DOMAIN, DELETE)
+        # Le dossier www est le dossier physique correspondant à l'URL /local/
+        www_dir = Path(self.hass.config.config_dir) / "www"
 
         if not os.path.exists(sent_dir):
             return
-
-        if not os.path.exists(delete_dir):
-            os.makedirs(delete_dir, exist_ok=True)
 
         now = datetime.now()
         purged_count = 0
@@ -96,21 +99,38 @@ class GenericTypeSensor(SensorEntity):
                     file_date_str = content["date"].strip()
                     try:
                         file_date = datetime.strptime(file_date_str, "%d/%m/%Y")
-                        # Calcul de l'ancienneté du fichier
                         age = now - file_date
                         
                         if age.days > 365:
-                            dest_path = os.path.join(delete_dir, file_path.name)
-                            shutil.move(str(file_path), dest_path)
+                            # 1. 📍 Extraction et suppression du fichier image associé si présent
+                            if "cmd" in content and content["cmd"] in ["BELL", "ALERT"] and "url" in content and content["url"]:
+                                try:
+                                    url_path = urlparse(content["url"]).path
+                                    image_name = Path(url_path).name  # Récupère "355f498b028345fb8a15fcd06cb70479.jpg"
+                                    image_file_path = www_dir / image_name
+
+                                    if image_file_path.is_file():
+                                        image_file_path.unlink()
+                                        _LOGGER.info("Purge : Image associée %s supprimée", image_name)
+                                except Exception as img_err:
+                                    _LOGGER.error(
+                                        "Purge : Impossible de supprimer l'image pour %s : %s", 
+                                        file_path.name, 
+                                        img_err
+                                    )
+
+                            # 2. 📍 Suppression définitive du fichier JSON
+                            file_path.unlink()
                             purged_count += 1
-                            _LOGGER.info("Purge : Fichier %s (>xj) déplacé vers DELETE", file_path.name)
+                            _LOGGER.info("Purge : Fichier index %s supprimé définitivement", file_path.name)
+                            
                     except ValueError:
                         _LOGGER.warning("Purge : Format de date invalide dans %s : %s", file_path.name, file_date_str)
             except (json.JSONDecodeError, OSError) as e:
                 _LOGGER.error("Purge : Impossible de traiter le fichier %s : %s", file_path.name, e)
 
         if purged_count > 0:
-            _LOGGER.info("Purge terminée : %d fichiers déplacés vers le dossier DELETE", purged_count)
+            _LOGGER.info("Purge terminée : %d messages et images associés ont été nettoyés", purged_count)
 
     async def async_update(self):
         """Vérifie les dossiers et traite les fichiers dans le dossier outbox."""
