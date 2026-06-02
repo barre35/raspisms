@@ -29,7 +29,7 @@ data:
     {   
       "numbers" : [ "+33xxxxxxxxx"], 
       "message" : "L'alarme est réglée sur {{arm_mode|lang=fr}}", 
-      "url"     : "https://home.kerfleury.fr/local/alarme_activee.jpg"
+      "url"     : "https://<<url>>/local/alarme_activee.jpg"
     }
 ```
 
@@ -43,7 +43,7 @@ data:
     {   
       "numbers" : [ "+33xxxxxxxxx"], 
       "message" : "L'alarme est maintenant désactivée", 
-      "url"     : "https://home.kerfleury.fr/local/alarme_desactivee.jpg"
+      "url"     : "https://<<url>>/local/alarme_desactivee.jpg"
     }
 ```
 
@@ -57,7 +57,7 @@ data:
     {   
       "numbers" : [ "+33xxxxxxxxx"], 
       "message" : "L'alarme est réglée sur {{arm_mode|lang=fr}}", 
-      "url"     : "https://home.kerfleury.fr/local/alarme_partielle.jpg"
+      "url"     : "https://<<url>>/local/alarme_partielle.jpg"
     }
 ```
 
@@ -98,7 +98,7 @@ data:
     {   
       "numbers" : [ "+33xxxxxxxxx"], 
       "message" : "Alarme déclenchée sur {{open_sensors|format=short}}",
-      "url"     : "https://home.kerfleury.fr/local/alarme_alerte.jpg",
+      "url"     : "https://<<url>>/local/alarme_alerte.jpg",
       "label" : "{{open_sensors|format=short}}"
     }
 ```
@@ -113,7 +113,7 @@ data:
     {   
       "numbers" : [ "+33xxxxxxxxx"], 
       "message" : "Poubelle jaune avant demain 12h",
-      "url"     : "https://home.kerfleury.fr/local/poubelle_jaune.jpg"
+      "url"     : "https://<<url>>/local/poubelle_jaune.jpg"
     }
 ```
 
@@ -127,7 +127,7 @@ data:
     {   
       "numbers" : [ "+33xxxxxxxxx"], 
       "message" : "Quelqu'un vient de sonner",
-      "label" : "DOOR"
+      "label" : "BELL"
     }
 ```
 
