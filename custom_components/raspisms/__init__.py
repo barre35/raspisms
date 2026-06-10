@@ -124,9 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # ALERT CAMERA
             # ============ 
             
-            async def alert_camera( number, message, camera_entity_id, cmd="ALERT"):
+            async def alert_camera( numbers, message, camera_entity_id, cmd="ALERT"):
 
-                _LOGGER.debug("Envoi d'un snapshot de la caméra '%s' vers '%s'", number)
+                _LOGGER.debug("Ajout du snaphsphot de la caméra '%s' dans les medias '%s'", camera_entity_id, cmd)
                 
                 unique_id = str(uuid.uuid4().hex)
                 base_url = get_url(hass, allow_internal=False)
@@ -147,22 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     
                 await hass.async_add_executor_job(copy_action)
 
-                file_name = f"{entry.entry_id}-{uuid.uuid4().hex}.json"
-                now = datetime.now()
-                
-                payload = {
-                    "numbers": str(number),
-                    "message": str(message),
-                    "date": now.strftime("%d/%m/%Y"),
-                    "time": now.strftime("%H:%M:%S"),
-                    "url": str(url),
-                    "cmd": cmd,
-                }
-                
-                storage_dir = hass.config.path(".storage", DOMAIN, OUTBOX)
-                os.makedirs(storage_dir, exist_ok=True)
-                full_path = os.path.join(storage_dir, file_name)
-
                 def write_outbox_file():
                     try:
                         with open(full_path, 'w', encoding='utf-8') as f:
@@ -170,8 +154,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         _LOGGER.info(f"Message sauvegardé dans {full_path}")
                     except Exception as e:
                         _LOGGER.error(f"Erreur lors de l'écriture : {e}")
+                
+                for number in numbers:
+                
+                    _LOGGER.debug(f"Alerte '{ message }' : '{ camera_entity_id }' sur '{ number }'")
+                
+                    file_name = f"{entry.entry_id}-{uuid.uuid4().hex}.json"
+                    now = datetime.now()
 
-                await hass.async_add_executor_job(write_outbox_file)
+                    payload = {
+                        "numbers": str(number),
+                        "message": str(message),
+                        "date": now.strftime("%d/%m/%Y"),
+                        "time": now.strftime("%H:%M:%S"),
+                        "url": str(url),
+                        "cmd": cmd,
+                    }
+                    
+                    storage_dir = hass.config.path(".storage", DOMAIN, OUTBOX)
+                    os.makedirs(storage_dir, exist_ok=True)
+                    full_path = os.path.join(storage_dir, file_name)
+                                    
+                    await hass.async_add_executor_job(write_outbox_file)
         
             # ============
             # MAIN SERVICE
@@ -260,9 +264,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
                             for _camera in cameras:
                                 await snapshot_camera( _camera)
-                                for _number in numbers:
-                                    _LOGGER.debug(f"Bell '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
-                                    await alert_camera( _number, message, _camera, cmd="BELL")
+                                await alert_camera( numbers, message, _camera, cmd="BELL")
                                     
                 case "ALERT":
             
@@ -298,9 +300,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             ]
 
                             for _camera in cameras:
-                                for _number in numbers:
-                                    _LOGGER.debug(f"Alerte '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
-                                    await alert_camera( _number, message, _camera, cmd="ALERT")
+                                await alert_camera( numbers, message, _camera, cmd="ALERT")
                                 
                 case _:
                 

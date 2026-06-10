@@ -64,6 +64,7 @@ class RaspiSMSMediaSource(MediaSource):
         """Charge et fusionne les JSON de SENT et OUTBOX en une seule liste."""
 
         data_list = []
+        seen_urls = set()
         
         # On boucle directement sur les dossiers cibles
         for box in ["SENT", "OUTBOX"]:
@@ -81,6 +82,11 @@ class RaspiSMSMediaSource(MediaSource):
                         
                         if "date" in content and "url" in content and "cmd" in content and content["cmd"] == filter:
                             
+                            url = content["url"].strip()
+                            
+                            if url in seen_urls:
+                                continue
+                            
                             try:
                                 dt = datetime.strptime(content["date"].strip(), "%d/%m/%Y")
                                 content["_datetime"] = dt
@@ -94,6 +100,7 @@ class RaspiSMSMediaSource(MediaSource):
 
                             content["_file_name"] = file_path.name
                             content["_box"] = box
+                            seen_urls.add(url)
                             data_list.append(content)
 
                 except (json.JSONDecodeError, OSError):
