@@ -258,8 +258,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                 if entitiy_with_label.domain == "camera"
                             ]
 
-                            for _number in numbers:
-                                for _camera in cameras:
+                            for _camera in cameras:
+                                for _number in numbers:
                                     _LOGGER.debug(f"Bell '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
                                     await snapshot_camera( _camera)
                                     await alert_camera( _number, message, _camera, cmd="BELL")
@@ -297,8 +297,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                 if entitiy_with_label.domain == "camera"
                             ]
 
-                            for _number in numbers:
-                                for _camera in cameras:
+                            for _camera in cameras:
+                                for _number in numbers:
                                     _LOGGER.debug(f"Alerte '{ message } avec le label '{ label }' : '{ _camera }' sur { _number }")
                                     await alert_camera( _number, message, _camera, cmd="ALERT")
                                 
